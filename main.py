@@ -71,6 +71,21 @@ class KBTest(unittest.TestCase):
         answer = self.KB.kb_ask(ask1)
         self.assertEqual(str(answer[0]), "?X : bing")
 
+    def test6(self):
+        # Who's hyped for Avengers Endgame?
+        ask1 = read.parse_input("fact: (kills Thanos ?X)")
+        print(' Asking if', ask1)
+        answer = self.KB.kb_ask(ask1)
+        self.assertEqual(len(answer), 2)
+
+    def test7(self):
+        r1 = read.parse_input("fact: (wants Thanos stone)")
+        print(' Retracting', r1)
+        self.KB.kb_retract(r1)
+        ask1 = read.parse_input("fact: (kills Thanos ?X)")
+        print(' Asking if', ask1)
+        answer = self.KB.kb_ask(ask1)
+        self.assertEqual(len(answer), 0)
 
 def pprint_justification(answer):
     """Pretty prints (hence pprint) justifications for the answer.

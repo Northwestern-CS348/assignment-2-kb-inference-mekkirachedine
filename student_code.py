@@ -126,9 +126,49 @@ class KnowledgeBase(object):
             None
         """
         printv("Retracting {!r}", 0, verbose, [fact_or_rule])
-        ####################################################
-        # Student code goes here
-        
+
+        if isinstance(fact_or_rule, Fact):
+            thing = self.facts.index(fact_or_rule)
+            if len(self.facts[thing].supported_by) > 0:     #fact_or_rule is inferred
+                self.facts[thing].asserted = False
+            else:                                       #fact not inferred so gets removed along with things it infers
+                for f in self.facts[thing].supports_facts:
+                    for s in f.supported_by:
+                        if s[0] == self.facts[thing]:
+                            ind = f.supported_by.index(s)
+                            f.supported_by.pop(ind)
+                            self.kb_retract(f)
+                for r in self.facts[thing].supports_rules:
+                    for s in r.supported_by:
+                        if s[0] == self.facts[thing]:
+                            ind = r.supported_by.index(s)
+                            r.supported_by.pop(ind)
+                            self.kb_retract(r)
+                self.facts[thing].supports_facts = []
+                self.facts[thing].supports_rules = []
+                self.facts.pop(thing)
+
+        """elif isinstance(fact_or_rule, Rule):
+            thing = self.rules.index(fact_or_rule)
+            if len(self.rules[thing].supported_by) > 0:     #fact_or_rule is inferred
+                self.rules[thing].asserted = False
+            else:                                       #fact not inferred so gets removed along with things it infers
+                for f in self.rules[thing].supports_facts:
+                    for s in f.supported_by:
+                        if s[0] == self.facts[thing]:
+                            ind = f.supported_by.index(s)
+                            f.supported_by.pop(ind)
+                            self.kb_retract(f)
+                for r in self.rules[thing].supports_rules:
+                    for s in r.supported_by:
+                        if s[0] == self.facts[thing]:
+                            ind = r.supported_by.index(s)
+                            r.supported_by.pop(ind)
+                            self.kb_retract(r)
+                self.rules[thing].supports_facts = []
+                self.rules[thing].supports_rules = []
+                self.rules.pop(thing)"""
+
 
 class InferenceEngine(object):
     def fc_infer(self, fact, rule, kb):
@@ -144,5 +184,26 @@ class InferenceEngine(object):
         """
         printv('Attempting to infer from {!r} and {!r} => {!r}', 1, verbose,
             [fact.statement, rule.lhs, rule.rhs])
-        ####################################################
-        # Student code goes here
+        possiblebindings = match(fact.statement, rule.lhs[0])
+        if possiblebindings != False:
+            if len(rule.lhs) == 1:
+                newfact = Fact(instantiate(rule.rhs, possiblebindings))
+                newfact.supported_by.append([fact, rule])
+                fact.supports_facts.append(newfact)
+                rule.supports_facts.append(newfact)
+                kb.kb_assert(newfact)
+            else:
+                newlhs = [instantiate(rule.lhs[1], possiblebindings)]+rule.lhs[2:]
+                newrule = Rule([newlhs, instantiate(rule.rhs, possiblebindings)])
+                newrule.supported_by.append([fact, rule])
+                fact.supports_rules.append(newrule)
+                rule.supports_rules.append(newrule)
+                kb.kb_assert(newrule)
+
+
+
+
+
+
+
+
